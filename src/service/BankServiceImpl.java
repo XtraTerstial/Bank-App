@@ -10,6 +10,7 @@ import exceptions.ValidationException;
 import repository.AccountRepository;
 import repository.CustomerRepository;
 import repository.TransactionRepository;
+import util.Validation;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -21,8 +22,28 @@ public class BankServiceImpl implements BankService{
     private final TransactionRepository transactionRepository = new TransactionRepository();
     private final CustomerRepository customerRepository = new CustomerRepository();
 
+    private final Validation<String> validateName = name -> {
+        if(name == null || name.isBlank()) throw new ValidationException("Name is required");
+    };
+    private final Validation<String> validateEmail = email -> {
+        if(email == null || !email.contains("@")) throw new ValidationException("Email is Required");
+    };
+    private final Validation<String> validateType = type ->{
+        if(type == null || !(type.equalsIgnoreCase("SAVINGS" ) || type.equalsIgnoreCase("CURRENT")))
+            throw new ValidationException("Account Type should be either SAVINGS or CURRENT only");
+    };
+    private final Validation<Double> validateAmountPositive = amount ->{
+        if(amount == null || amount < 0)
+            throw new ValidationException("Please enter valid amount");
+    };
+
     @Override
     public String openAccount(String name, String email, String accountType) {
+        //Validations
+        validateName.validate(name);
+        validateEmail.validate(email);
+        validateType.validate(accountType);
+
         String customerId = UUID.randomUUID().toString();
         // TODO:- Change Later --> 10+1 = AC000011 --> AC<06>
 //        String accountNumber = UUID.randomUUID().toString();
